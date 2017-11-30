@@ -70,9 +70,17 @@ pub unsafe trait ArrayLength<T>: Unsigned {
     type ArrayType;
 }
 
+trait ArrayLen2: Unsigned {
+    const LEN: usize;
+}
+
 unsafe impl<T> ArrayLength<T> for UTerm {
     #[doc(hidden)]
     type ArrayType = ();
+}
+
+impl ArrayLen2 for UTerm {
+    const LEN: usize = 0;
 }
 
 /// Internal type used to generate a struct of appropriate size
@@ -129,10 +137,25 @@ unsafe impl<T, N: ArrayLength<T>> ArrayLength<T> for UInt<N, B1> {
     type ArrayType = GenericArrayImplOdd<T, N::ArrayType>;
 }
 
+impl<N: ArrayLen2> ArrayLen2 for UInt<N, B0> {
+    const LEN: usize = N::LEN * 2;
+}
+
+impl<N: ArrayLen2> ArrayLen2 for UInt<N, B1> {
+    const LEN: usize = N::LEN * 2 + 1;
+}
+
+
 /// Struct representing a generic array - `GenericArray<T, N>` works like [T; N]
 #[allow(dead_code)]
 pub struct GenericArray<T, U: ArrayLength<T>> {
     data: U::ArrayType,
+}
+
+/// Struct representing a generic array - `GenericArray<T, N>` works like [T; N]
+#[allow(dead_code)]
+struct GenericArray2<T, U: ArrayLen2> {
+    data: [T; U::LEN]
 }
 
 impl<T, N> Deref for GenericArray<T, N>
@@ -462,3 +485,4 @@ mod test {
         assert_eq!(c, arr![i32; 3, 7, 11, 15]);
     }
 }
+
